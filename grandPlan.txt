@@ -1,0 +1,87 @@
+Grand plan:
+(Massively) Multiplayer RTS.
+
+Everything updates each second.
+Commands/events get created in each tick.
+
+
+Maps:
+    - have an age
+    - maybe die after a certain point?
+    - different types:
+      - mostly sea, mostly land, mostly air
+      - can be psuedo-infinite, or limited. Maybe wrap around?
+    - 3 layers: ground, above ground and air
+    - entities collide with above ground
+    - blocks:
+      - ground: grass, rock, sea
+      - above ground: most buildings, mountain (ground + above)
+      - air: air base? floating archery towery kind of stuff
+      - clouds...hmm
+    - ability to terraform
+    - generation:
+        heightmap
+            sea, lake, river, beach
+        biome:
+            grassy, rocky, forest,
+
+
+Players:
+    - Single "Player" for each player.
+    - Each player has a level, xp, achievements, awards,
+    - and research
+
+Research:
+    - school researchers.
+    - these researchers then research technologies and unlock units
+
+
+Commands:
+    entities:
+        move, shoot, defend feels we, wait
+    buildings:
+        build, stop, etc...
+
+Units:
+        shoot, move, etc...
+    5 types:
+        4 melee, 3 ranged
+    
+    each of those has 1 slow + tough and one fast + weak
+    each of those has at least one air
+
+    melee:
+        warrior, "tank",  
+    
+    ranged:
+        archer, archery tank
+
+Buildings:
+    Neutral:
+        Main home base thingy
+        (water) barracks
+            - if placed next to water, will produce water units
+        (water) Vehicle factory
+            - if placed next to water, will produce water units
+        Energy producer thingy
+    Offense:
+        (air) (water) Tower
+            - gaurds air, water based off of stuff
+            - fast, not so much hard hitting
+        (air) (water) Cannon
+            - slow, hard hitting
+        land / sea / air mines
+            - blow up and have to be manually replaced
+    Deffense:
+        land / sea Walls
+            - upgrade them infinitely but gets progressively harder the higher up
+            - doesn't let enemy units through, lets ally troops through
+    Both:
+        laser walls
+            - lets enemy units through but hurts them
+            - only for land
+
+
+events:
+    terrain changes
+
