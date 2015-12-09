@@ -6,7 +6,9 @@ const mod = util.mod;
 const World = module.exports = function (data) {
 	data = data || {};
 	this.age = data.age || 0;
-	this.objects = data.objects || [];
+	this.entities = data.entities || [];
+
+	this.view = new Pixi.Graphics();
 
 	this.width = 5;		// For rendering
 	this.height = 3;	// ^^
@@ -24,7 +26,9 @@ World.prototype.generate = function (X, Y, width, height) {
 	for (let x = -width; x < width; x++) {
 		for (let y = -height; y < height; y++) {
 			if (!this.map[`${x + X},${y + Y}`]) {
-				this.map[`${x + X},${y + Y}`] = Chunk.generate(x + X, y + Y);
+				let chunk = Chunk.generate(x + X, y + Y);
+				chunk.build();
+				this.map[`${x + X},${y + Y}`];
 			}
 		}
 	}
@@ -37,9 +41,18 @@ World.prototype.load = function (X, Y, width, height) {
 	Y = Y || 0;
 
 	this.activeChunks = [];
+	this.view.clear();
 	for (let x = -width; x < width; x++) {
 		for (let y = -height; y < height; y++) {
-			this.activeChunks.push(this.map[`${x + X},${y + Y}`]);
+			let rx = Math.round(X + x), ry = Math.round(Y + y);
+			if (!this.map[`${rx},${ry}`]) {
+				let chunk = Chunk.generate(rx, ry);
+				chunk.build();
+				this.map[`${rx},${ry}`] = chunk;
+			}
+
+			this.view.addChild(this.map[`${rx},${ry}`].view);
+			this.activeChunks.push(this.map[`${rx},${ry}`]);
 		}
 	}
 };
@@ -66,17 +79,25 @@ World.prototype.set = function (x, y, v) {
 	return undefined;
 };
 
-World.prototype.addObject = function (obj) {
-	this.objects.push(obj);
+World.prototype.spawn = function (entity) {
+	this.entities.push(entity);
 };
 
 World.prototype.tick = function (delta) {
+	this.entities.forEach(function (entity) {
+		entity.tick();
+	});
 	// this.generate(Math.round(this.player.pos.x / SIZE), Math.round(this.player.pos.y / SIZE));
 	// this.load(Math.round(this.player.pos.x / SIZE), Math.round(this.player.pos.y / SIZE));
 };
 
-World.prototype.draw = function	 (context) {
+World.prototype.build = function () {
+	this.view.clear();
 	this.activeChunks.forEach(function (chunk, index) {
-		chunk.draw(context);
+		chunk.build();
 	}, this);
+
+	this.entities.forEach(function (entity) {
+		entity.draw(graphics);
+	});
 };
