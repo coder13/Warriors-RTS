@@ -46,10 +46,10 @@ Chunk.prototype.build = function () {
 	// draw outline
 	this.view.beginFill(0, 0);
 	this.view.lineStyle(3 / Scale, 0);
-	this.view.moveTo(this.x * SIZE, this.y * SIZE);
-	this.view.lineTo(this.x * SIZE + SIZE, this.y * SIZE);
-	this.view.lineTo(this.x * SIZE + SIZE, this.y * SIZE + SIZE);
-	this.view.lineTo(this.x * SIZE, this.y * SIZE + SIZE);
+	this.view.moveTo( this.x 	  * SIZE,  this.y	   * SIZE);
+	this.view.lineTo((this.x + 1) * SIZE,  this.y	   * SIZE);
+	this.view.lineTo((this.x + 1) * SIZE, (this.y + 1) * SIZE);
+	this.view.lineTo( this.x	  * SIZE, (this.y + 1) * SIZE);
 	this.view.endFill();
 };
 
@@ -83,6 +83,10 @@ module.exports.generate = function (X, Y) {
 			chunk.map[i] = 2;
 		} else {
 			chunk.map[i] = 4;
+		}
+
+		if (rx === 0 && ry === 0) {
+			chunk.map[i] = 1;
 		}
 	}
 

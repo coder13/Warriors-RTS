@@ -63,7 +63,7 @@ const app = window.app = App.extend({
 			this.events.mousemove.call(this, event);
 		});
 
-		this.renderer.view.onmousewheel = this.events.mousewheel.bind(this);
+		window.onmousewheel = this.events.mousewheel.bind(this);
 
 		window.addEventListener('keydown', (event) => {
 			if (this.keys[event.which] === undefined || this.keys[event.which] === 0) {
@@ -100,7 +100,8 @@ const app = window.app = App.extend({
 	started: false,
 	events: {
 		mousedown (event) {
-			console.log(this.mousePos());
+			console.log(event);
+			// console.log(this.mousePos());
 		},
 
 		mouseup (event) {
@@ -108,8 +109,8 @@ const app = window.app = App.extend({
 
 		mousemove (event) {
 			if (this.mouse.down && this.keys[17]) {
-				this.pos.x += Math.round((event.movementX) * Scale) / Scale;
-				this.pos.y += Math.round((event.movementY) * Scale) / Scale;
+				this.pos.x += Math.round((event.movementX));
+				this.pos.y -= Math.round((event.movementY));
 				// this.reload();
 			}
 		},
@@ -153,19 +154,20 @@ const app = window.app = App.extend({
 	},
 
 	mousePos () {
-		return new Vec2(Math.floor(this.pos.x + (this.mouse.x - app.width / 2) / Scale), Math.floor(this.pos.y + (app.height / 2 - this.mouse.y) / Scale));
+		return new Vec2(Math.floor((-this.pos.x + this.mouse.x - app.width / 2) / Scale),
+						Math.floor((-this.pos.y - this.mouse.y + app.height / 2) / Scale));
+		// return new Vec2(Math.floor(this.pos.x + (this.mouse.x - app.width / 2) / Scale), Math.floor(this.pos.y + (app.height / 2 - this.mouse.y) / Scale));
 	},
 
 	mousePosExact () {
-		return new Vec2(this.pos.x + (this.mouse.x - app.width / 2) / Scale, this.pos.y + (app.height / 2 - this.mouse.y) / Scale);
+		return new Vec2((-this.pos.x + this.mouse.x - app.width  / 2) / Scale,
+						(-this.pos.y - this.mouse.y + app.height / 2) / Scale);
 	},
 
 	scale (scale) {
 		this.Scale = scale;
-		if (this.world) {
-			this.world.view.scale.x = Scale;
-			this.world.view.scale.y = -Scale;
-		}
+		this.stage.scale.x = scale;
+		this.stage.scale.y = -scale;
 	},
 
 	reload (x, y) {
@@ -173,7 +175,6 @@ const app = window.app = App.extend({
 		y = y || this.pos.y;
 		if (this.world) {
 			this.world.load(Math.round(x / SIZE / -Scale), Math.round(y / SIZE / Scale), Math.ceil(app.width / Scale / SIZE / 2) + 1, Math.ceil(app.height / Scale / SIZE / 2) + 1);
-			this.renderer.render(this.stage);
 		}
 	},
 
@@ -185,7 +186,7 @@ const app = window.app = App.extend({
 		this.world = new World();
 		// this.world.generate(this.pos.x, this.pos.y, 40, 20);
 		this.reload(0, 0);
-		this.scale(Scale)
+		this.scale(Scale);
 
 		this.world.build();
 		this.stage.addChild(this.world.view);
@@ -222,8 +223,8 @@ const app = window.app = App.extend({
 	tick (delta) {
 		this.input(delta);
 
-		this.world.view.x = this.pos.x;
-		this.world.view.y = this.pos.y;
+		this.stage.x =  (this.pos.x + app.width / 2);
+		this.stage.y = -(this.pos.y - app.height / 2);
 
 		let mp = this.mousePos();
 		this.pointer.x = mp.x;
@@ -233,7 +234,7 @@ const app = window.app = App.extend({
 	},
 
 	input (delta) {
-		let speed = Scale / 2;
+		let speed = 4 / Scale;
 		if (this.keys[37]) {
 			this.pos.x += speed;
 		} else if (this.keys[39]) {
