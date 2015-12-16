@@ -1,5 +1,7 @@
 const Entity = module.exports = function (x, y, radius, color) {
-	this.pos = {x, y};
+	this.view = new Pixi.Graphics();
+	this.x = x;
+	this.y = y;
 	this.radius = radius || 1;
 	this.color = color || 'black';
 	this.destination = undefined;
@@ -7,11 +9,18 @@ const Entity = module.exports = function (x, y, radius, color) {
 
 Entity.prototype.command = function (command) {};
 
-Entity.prototype.tick = function (delta) {};
+Entity.prototype.tick = function (delta) {
+	let d = (Math.random() + 1) * Math.PI;
+	this.x += Math.cos(d) * delta / 100;
+	this.y += Math.sin(d) * delta / 100;
 
-Entity.prototype.build = function (graphics) {
-	graphics.beginFill(this.color);
-	graphics.lineStyle(1.5 / Scale, 0);
-	graphics.drawCircle(this.x, this.y, this.radius);
-	graphics.endFill();
+	this.view.x = this.x;
+	this.view.y = this.y;
+};
+
+Entity.prototype.build = function () {
+	this.view.beginFill(this.color);
+	this.view.lineStyle(1.5 / Scale, 0);
+	this.view.drawCircle(this.x, this.y, this.radius);
+	this.view.endFill();
 };

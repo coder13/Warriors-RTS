@@ -2,13 +2,14 @@ require('./styles/main.styl');
 
 // constants:
 const SIZE = window.SIZE = 32; // Chunk Size
-window.Scale = 12; // Chunk Size
+window.Scale = +window.localStorage.getItem('warriors_scale') || 12; // Chunk Size
 
 const App = require('ampersand-app');
 const Pixi = window.Pixi = require('pixi.js');
+const Me = require('./me');
 const Vec2 = require('./lib/vec2');
 const Entity = require('./entity');
-const World = require('./world');
+const World = require('../lib/world');
 
 const requestAnimationFrame = window.requestAnimationFrame ||
 						window.webkitRequestAnimationFrame ||
@@ -24,15 +25,11 @@ const app = window.app = App.extend({
 		this.width = (window.innerWidth || document.body.width);
 		this.height = (window.innerHeight || document.body.height);
 
-		// this.canvas = document.createElement('canvas');
-		// this.context = this.canvas.getContext('2d');
-		// this.canvas.width = this.width;
-		// this.canvas.height = this.height;
+		this.me = new Me();
 
 		this.renderer = new Pixi.WebGLRenderer(this.width, this.height);
 		this.renderer.autoResize = true;
 		document.body.appendChild(this.renderer.view);
-		// document.body.appendChild(this.canvas);
 
 		this.stage = new Pixi.Container(0xFFFF00, true);
 		this.stage.x = this.width / 2;
@@ -47,7 +44,6 @@ const app = window.app = App.extend({
 
 	initInput () {
 		window.addEventListener('mousedown', (event) => {
-			console.log(event);
 			this.mouse.down = true;
 			this._moveMouse(event);
 			this.events.mousedown.call(this, event);
@@ -108,7 +104,7 @@ const app = window.app = App.extend({
 		},
 
 		mousemove (event) {
-			if (this.mouse.down && this.keys[17]) {
+			if (this.mouse.down/* && this.keys[17]*/) {
 				this.pos.x += Math.round((event.movementX));
 				this.pos.y -= Math.round((event.movementY));
 				// this.reload();
@@ -140,13 +136,13 @@ const app = window.app = App.extend({
 		},
 
 		keydownOnce (event) {
-			if (event.which === 83) {
-				let mp = this.mousePosExact();
-				let entity = new Entity(mp.x, mp.y, 4, 0xFF0000);
-				this.world.spawn(entity);
-				entity.build(this.graphics);
-				console.log('spawned entity at', mp.x, mp.y);
-			}
+			// if (event.which === 83) {
+			// 	let mp = this.mousePosExact();
+			// 	let entity = new Entity(mp.x, mp.y, Math.random() * 2, Math.round((Math.random()+1)/2*0xFFFFFF));
+			// 	this.world.spawn(entity);
+			// 	// this.stage.addChild(entity.view);
+			// 	console.log('spawned entity at', mp.x, mp.y, entity);
+			// }
 		},
 
 		keypress (event) {
@@ -160,22 +156,48 @@ const app = window.app = App.extend({
 	},
 
 	mousePosExact () {
-		return new Vec2((-this.pos.x + this.mouse.x - app.width  / 2) / Scale,
-						(-this.pos.y - this.mouse.y + app.height / 2) / Scale);
+		return new Vec2(Math.floor((-this.pos.x + this.mouse.x - app.width / 2) / Scale),
+						Math.floor((-this.pos.y - this.mouse.y + app.height / 2) / Scale));
 	},
 
 	scale (scale) {
 		this.Scale = scale;
 		this.stage.scale.x = scale;
 		this.stage.scale.y = -scale;
+		if (this.world) {
+			this.world.buildOutline();
+		}
+
+		if (this.pointer) {
+			this.buildPointer();
+		}
+
+		window.localStorage.setItem('warriors_scale', scale);
 	},
 
 	reload (x, y) {
 		x = x || this.pos.x;
 		y = y || this.pos.y;
 		if (this.world) {
-			this.world.load(Math.round(x / SIZE / -Scale), Math.round(y / SIZE / Scale), Math.ceil(app.width / Scale / SIZE / 2) + 1, Math.ceil(app.height / Scale / SIZE / 2) + 1);
+			this.world.load(Math.round(x / SIZE / -Scale),
+							Math.round(-y / SIZE / Scale),
+							Math.ceil(app.width / Scale / SIZE / 2) + 1,
+							Math.ceil(app.height / Scale / SIZE / 2) + 1);
 		}
+	},
+
+	buildPointer () {
+		this.pointer.clear();
+		let mp = this.mousePos();
+		this.pointer.x = mp.x;
+		this.pointer.y = mp.y;
+		this.pointer.beginFill(0, 0);
+		this.pointer.lineStyle(1.5 / Scale, 0);
+		this.pointer.moveTo(0, 0);
+		this.pointer.lineTo(1, 0);
+		this.pointer.lineTo(1, 1);
+		this.pointer.lineTo(0, 1);
+		this.pointer.endFill();
 	},
 
 	// Initiate all game objects and start loop.
@@ -190,18 +212,10 @@ const app = window.app = App.extend({
 
 		this.world.build();
 		this.stage.addChild(this.world.view);
+		this.stage.addChild(this.world.entityLayer);
 
 		this.pointer = new Pixi.Graphics();
-		let mp = this.mousePos();
-		this.pointer.x = mp.x;
-		this.pointer.y = mp.y;
-		this.pointer.beginFill(0, 0);
-		this.pointer.lineStyle(1 / Scale, 0);
-		this.pointer.moveTo(0, 0);
-		this.pointer.lineTo(1, 0);
-		this.pointer.lineTo(1, 1);
-		this.pointer.lineTo(0, 1);
-		this.pointer.endFill();
+		this.buildPointer();
 
 		this.stage.addChild(this.pointer);
 
@@ -223,7 +237,7 @@ const app = window.app = App.extend({
 	tick (delta) {
 		this.input(delta);
 
-		this.stage.x =  (this.pos.x + app.width / 2);
+		this.stage.x = (this.pos.x + app.width / 2);
 		this.stage.y = -(this.pos.y - app.height / 2);
 
 		let mp = this.mousePos();
@@ -234,7 +248,7 @@ const app = window.app = App.extend({
 	},
 
 	input (delta) {
-		let speed = 4 / Scale;
+		let speed = Scale;
 		if (this.keys[37]) {
 			this.pos.x += speed;
 		} else if (this.keys[39]) {
@@ -242,9 +256,19 @@ const app = window.app = App.extend({
 		}
 
 		if (this.keys[38]) {
-			this.pos.y += speed;
-		} else if (this.keys[40]) {
 			this.pos.y -= speed;
+		} else if (this.keys[40]) {
+			this.pos.y += speed;
+		}
+
+		for (let i = 0; i < 10; i++) {
+			if (this.keys[83]) {
+				let mp = this.mousePosExact();
+				let entity = new Entity(mp.x, mp.y, Math.random() * 2, Math.round((Math.random() + 1) / 2 * 0xFFFFFF));
+				this.world.spawn(entity);
+				// this.stage.addChild(entity.view);
+				console.log('spawned entity at', mp.x, mp.y, entity);
+			}
 		}
 		this.reload();
 	}

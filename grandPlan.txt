@@ -7,6 +7,9 @@ Commands/events get created in each tick.
 
 Maps:
     - have an age
+      - ticks each second; second per second
+      - everything happens in each of these seconds
+
     - maybe die after a certain point?
     - different types:
       - mostly sea, mostly land, mostly air

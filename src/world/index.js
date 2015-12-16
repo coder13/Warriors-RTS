@@ -8,6 +8,7 @@ const World = module.exports = function (data) {
 	this.age = data.age || 0;
 	this.entities = data.entities || [];
 
+	this.entityLayer = new Pixi.Container();
 	this.view = new Pixi.Graphics();
 
 	this.width = 5;		// For rendering
@@ -81,11 +82,13 @@ World.prototype.set = function (x, y, v) {
 
 World.prototype.spawn = function (entity) {
 	this.entities.push(entity);
+	entity.build();
+	this.entityLayer.addChild(entity.view);
 };
 
 World.prototype.tick = function (delta) {
 	this.entities.forEach(function (entity) {
-		entity.tick();
+		entity.tick(delta);
 	});
 	// this.generate(Math.round(this.player.pos.x / SIZE), Math.round(this.player.pos.y / SIZE));
 	// this.load(Math.round(this.player.pos.x / SIZE), Math.round(this.player.pos.y / SIZE));
@@ -96,8 +99,4 @@ World.prototype.build = function () {
 	this.activeChunks.forEach(function (chunk, index) {
 		chunk.build();
 	}, this);
-
-	this.entities.forEach(function (entity) {
-		entity.draw(graphics);
-	});
 };
